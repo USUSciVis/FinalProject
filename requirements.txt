@@ -1,0 +1,7 @@
+pandas
+nump
+pyvista
+trame
+ipywidgets
+ipykernel
+matplotlib
