@@ -15,10 +15,8 @@ def updateDataFrame(df, x, y, date, colName, value):
         print(f"Skipped (bad Value): {x}, {y}, {date}, {colName} value: {value}")
         return
     if len(df[df.X==x][df.Y == y][df.date == date])>= 1: 
-        if df.at[df[df.X==x][df.Y == y][df.date == date].index[0], colName ] == -1.0:
+        if df.at[df[df.X==x][df.Y == y][df.date == date].index[0], colName ] < float(value):
             df.at[df[df.X==x][df.Y == y][df.date == date].index[0], colName ] = float(value)
-        else:
-            df.at[df[df.X==x][df.Y == y][df.date == date].index[0], colName ] += float(value)
     else: 
         print(f"Skipped (out of date range): {x}, {y}, {date}, {colName} value: {value}")
 
