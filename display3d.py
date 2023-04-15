@@ -73,33 +73,60 @@ def genMap():
     
     plt.savefig('map_merc_section.jpg',bbox_inches='tight',transparent=True, pad_inches=0)
 
-# def date_slider(value):
-#     global iso
+def render():
+    global chernobyl_map
+    global plotter
+    global date
+    global iso
 
-#     date = datetime.date(1986, 4, 27) + datetime.timedelta(days=value)
-#     plotter.clear()
-#     chernobyl_map: pv.UniformGrid = pv.read("map.jpg")
-#     plotter.add_mesh(chernobyl_map, rgb=True)
+    plotter.clear_actors()
 
-#     sensor_latitudes = []
-#     sensor_longitudes = []
-#     iso_values = []
+    plotter.add_mesh(chernobyl_map, rgb=True)
+    plotter.add_text(f"{date.month}-{date.day}-{date.year}")
+    plotter.add_text(f"{iso}", position='lower_left')
+    sensor_latitudes = []
+    sensor_longitudes = []
+    iso_values = []
 
-#     if date.day >=10:
-#         strdate = f"{date.year}-0{date.month}-{date.day}"
-#     else:
-#         strdate = f"{date.year}-0{date.month}-0{date.day}"
+    if date.day >=10:
+        strdate = f"{date.year}-0{date.month}-{date.day}"
+    else:
+        strdate = f"{date.year}-0{date.month}-0{date.day}"
 
-#     for lon, lat, value in data[data.date == strdate].filter(['X','Y', iso]).drop_duplicates().values:
-#         sensor_longitudes.append(lon)
-#         sensor_latitudes.append(lat)
-#         iso_values.append(float(value))
+    for lon, lat, value in data[data.date == strdate].filter(['X','Y', iso]).drop_duplicates().values:
+        sensor_longitudes.append(lon)
+        sensor_latitudes.append(lat)
+        iso_values.append(float(value))
+
+    for i in range(len(sensor_latitudes)):
+        x, y = lon_lat_to_x_y_merc(sensor_longitudes[i], sensor_latitudes[i])
+        x, y = pix_conv(x, y)
+        if x<0 or y < 0:
+            continue
+        bound = box_bounds(x, y, iso_values[i]*5)
+        box = pv.Box(bound)
+        edges = box.extract_feature_edges()
+        plotter.add_mesh(box, color ='red')
+        plotter.add_mesh(edges, color ='black')
+
+def date_slider(value):
+    global iso
+    global date
+   
+    date = datetime.date(1986, 4, 27) + datetime.timedelta(days=int(value))
+    render()
     
-#     for i in range(len(sensor_latitudes)):
-#         x, y = lon_lat_to_x_y(sensor_longitudes[i], sensor_latitudes[i])
-#         bound = box_bounds(x, y, iso_values[i])
-#         box = pv.Box(bound)
-#         plotter.add_mesh(box)
+def iso_slider(value):
+    global iso
+    
+    if value >= 1 and value < 2:
+        iso = "I_131_(Bq/m3)"
+    elif value >= 2 and value < 3:
+        iso = "Cs_134_(Bq/m3)"
+    else:
+        iso = "Cs_137_(Bq/m3)"
+   
+    render()
 
 # genMap()
 
@@ -107,42 +134,22 @@ plotter = pv.Plotter(notebook=False)
 date_range = [0,35]
 
 data = pd.read_csv("data/cleaned.csv")
+
+date = datetime.date(1986, 4, 27)
 iso = "I_131_(Bq/m3)"
 
 
+plotter.add_slider_widget(date_slider, date_range, value = 0, fmt="%2.0f", pointa=(0.4, .9), pointb=(0.9, .9))
+plotter.add_slider_widget(iso_slider, [1,3], value = 1, fmt="%2.1f", pointa=(0.4, .75), pointb=(0.9, .75))
 
 
-
-
-date = datetime.date(1986, 4, 27) + datetime.timedelta(days=4)
-plotter.clear()
 chernobyl_map: pv.UniformGrid = pv.read("map_merc_section.jpg")
-plotter.add_mesh(chernobyl_map, rgb=True)
+
 IMAGE_X = int(chernobyl_map.bounds[1])
 IMAGE_Y = int(chernobyl_map.bounds[3])
 
+render()
 
-
-sensor_latitudes = []
-sensor_longitudes = []
-iso_values = []
-
-if date.day >=10:
-    strdate = f"{date.year}-0{date.month}-{date.day}"
-else:
-    strdate = f"{date.year}-0{date.month}-0{date.day}"
-
-for lon, lat, value in data[data.date == strdate].filter(['X','Y', iso]).drop_duplicates().values:
-    sensor_longitudes.append(lon)
-    sensor_latitudes.append(lat)
-    iso_values.append(float(value))
-
-for i in range(len(sensor_latitudes)):
-    x, y = lon_lat_to_x_y_merc(sensor_longitudes[i], sensor_latitudes[i])
-    x, y = pix_conv(x, y)
-    bound = box_bounds(x, y, iso_values[i])
-    box = pv.Box(bound)
-    plotter.add_mesh(box)
 
 
 
