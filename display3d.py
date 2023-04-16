@@ -109,7 +109,7 @@ def render():
         bound = box_bounds(x, y, iso_values[i]*5)
         box = pv.Box(bound)
         box["concentration_value"] = [iso_values[i]*5 for _ in range(box.n_cells)]
-        
+
         block.append(box)
 
 
@@ -123,16 +123,21 @@ def date_slider(value):
     date = datetime.date(1986, 4, 27) + datetime.timedelta(days=int(value))
     render()
     
-def iso_slider(value):
+def iso_slider(value, slider):
     global iso
+
+    value = round(value, None)
     
-    if value >= 1 and value < 2:
+    if value == 1:
         iso = "I_131_(Bq/m3)"
-    elif value >= 2 and value < 3:
+    elif value == 2:
         iso = "Cs_134_(Bq/m3)"
     else:
         iso = "Cs_137_(Bq/m3)"
-   
+
+    slider.GetSliderRepresentation().SetValue(value)
+
+
     render()
 
 # genMap()
@@ -146,8 +151,8 @@ date = datetime.date(1986, 4, 27)
 iso = "I_131_(Bq/m3)"
 
 
-plotter.add_slider_widget(date_slider, date_range, value = 0, fmt="%2.0f", pointa=(0.4, .9), pointb=(0.9, .9))
-plotter.add_slider_widget(iso_slider, [1,3], value = 1, fmt="%2.1f", pointa=(0.4, .75), pointb=(0.9, .75))
+plotter.add_slider_widget(date_slider, date_range, value = 0, fmt="%2.0f", pointa=(0.4, .9), pointb=(0.9, .9), title="Day")
+plotter.add_slider_widget(iso_slider, [1,3], value = 1, fmt="%2.1f", pointa=(0.4, .75), pointb=(0.9, .75), pass_widget=True, title="Isotope")
 
 
 chernobyl_map: pv.UniformGrid = pv.read("map_merc_section.jpg")
