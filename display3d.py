@@ -98,16 +98,23 @@ def render():
         sensor_latitudes.append(lat)
         iso_values.append(float(value))
 
+    block = pv.MultiBlock()
     for i in range(len(sensor_latitudes)):
         x, y = lon_lat_to_x_y_merc(sensor_longitudes[i], sensor_latitudes[i])
         x, y = pix_conv(x, y)
+
         if x<0 or y < 0:
             continue
+
         bound = box_bounds(x, y, iso_values[i]*5)
         box = pv.Box(bound)
-        edges = box.extract_feature_edges()
-        plotter.add_mesh(box, color ='red')
-        plotter.add_mesh(edges, color ='black')
+        box["concentration_value"] = [iso_values[i]*5 for _ in range(box.n_cells)]
+        
+        block.append(box)
+
+
+    block.set_active_scalars("concentration_value", preference="cell")
+    plotter.add_mesh(block.combine(), color="r", show_edges=True, scalars="concentration_value")
 
 def date_slider(value):
     global iso
