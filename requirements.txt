@@ -5,3 +5,5 @@ trame
 ipywidgets
 ipykernel
 matplotlib
+basemap
+basemap-data-hires
